@@ -1,14 +1,11 @@
-import React, { useCallback, useRef } from 'react';
-import { FiArrowLeft, FiMail, FiLock, FiUser } from 'react-icons/fi';
+import React, { useRef, useCallback } from 'react';
+import { FiLock } from 'react-icons/fi';
 import { Form } from '@unform/web';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
-import { Link, useHistory } from 'react-router-dom';
-
-import api from '../../services/api';
+import { useHistory } from 'react-router-dom';
 
 import { useToast } from '../../hooks/ToastContext';
-
 import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.svg';
@@ -18,43 +15,35 @@ import Button from '../../components/Button';
 
 import { Container, Content, Background, AnimationContainer } from './styles';
 
-interface SignUpFormData {
-  name: string;
-  email: string;
+interface ResetPasswordFormData {
   password: string;
+  password_confirmation: string;
 }
 
-const SignUp: React.FC = () => {
+const ResetPassword: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
-  const { addToast } = useToast();
   const history = useHistory();
 
+  const { addToast } = useToast();
+
   const handleSubmit = useCallback(
-    async (data: SignUpFormData) => {
+    async (data: ResetPasswordFormData) => {
       try {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          name: Yup.string().required('Nome obrigatório'),
-          email: Yup.string()
-            .required('E-mail obrigatório')
-            .email('E-mail inválido'),
-          password: Yup.string().min(6, 'Senha de no mínimo 6 dígitos'),
+          password: Yup.string().required('Senha obrigatória'),
+          password_confirmation: Yup.string().oneOf(
+            [Yup.ref('password'), undefined],
+            'Confirmação incorreta',
+          ),
         });
 
         await schema.validate(data, {
           abortEarly: false,
         });
 
-        await api.post('/users', data);
-
         history.push('/signin');
-
-        addToast({
-          type: 'success',
-          title: 'Cadastro realizado com Sucesso!',
-          description: 'Você já pode fazer logon no GoBarber!',
-        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -66,8 +55,8 @@ const SignUp: React.FC = () => {
 
         addToast({
           type: 'error',
-          title: 'Erro no cadastro',
-          description: 'Ocorreu um erro ao cadastrar, tente novamente.',
+          title: 'Erro ao resetar senha',
+          description: 'Ocorreu um erro ao resetar sua senha, tente novamente.',
         });
       }
     },
@@ -76,36 +65,35 @@ const SignUp: React.FC = () => {
 
   return (
     <Container>
-      <Background />
-
       <Content>
         <AnimationContainer>
           <img src={logoImg} alt="Logo GoBarber" />
 
           <Form ref={formRef} onSubmit={handleSubmit}>
-            <h1>Faça seu cadastro</h1>
-
-            <Input name="name" icon={FiUser} placeholder="Nome" />
-            <Input name="email" icon={FiMail} placeholder="E-mail" />
+            <h1>Resetar senha</h1>
 
             <Input
               name="password"
               icon={FiLock}
               type="password"
-              placeholder="Senha"
+              placeholder="Nova senha"
             />
 
-            <Button type="submit">Cadastrar</Button>
-          </Form>
+            <Input
+              name="password_confirmation"
+              icon={FiLock}
+              type="password"
+              placeholder="Confirme sua senha"
+            />
 
-          <Link to="/signin">
-            <FiArrowLeft />
-            Voltar para logon
-          </Link>
+            <Button type="submit">Alterar senha</Button>
+          </Form>
         </AnimationContainer>
       </Content>
+
+      <Background />
     </Container>
   );
 };
 
-export default SignUp;
+export default ResetPassword;
