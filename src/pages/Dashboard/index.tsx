@@ -21,7 +21,7 @@ import {
 } from './styles';
 
 import logoImg from '../../assets/logo.svg';
-import { useAuth } from '../../hooks/AuthContext';
+import { useAuth } from '../../hooks/auth';
 import api from '../../services/api';
 
 interface IMonthAvailabilityItem {
